@@ -1,11 +1,16 @@
 ﻿using System;
 using System.IO;
+using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 
 namespace EchoClientSimple
 {
     class Program
     {
+        //SSL
+        static bool leaveInnerStreamOpen = false;
+
         static void Main(string[] args)
         {
            
@@ -20,10 +25,18 @@ namespace EchoClientSimple
                 {
                     condition = false;
                 }
-                TcpClient socket = new TcpClient("localhost", 7); //initializing client
-                NetworkStream ns = socket.GetStream(); //processes the data received and sent. Must be separated into reader & writer
-                StreamReader reader = new StreamReader(ns);
-                StreamWriter writer = new StreamWriter(ns);
+
+                TcpClient socket = new TcpClient(/*("192.168.104.141")*/ "localhost", 7); //initializing client
+                
+                /* NetworkStream ns = socket.GetStream()*/; //processes the data received and sent. Must be separated into reader & writer
+
+                //To use SSL
+                Stream unsecureStream = socket.GetStream();
+                SslStream sslStream = new SslStream(unsecureStream, leaveInnerStreamOpen);
+                sslStream.AuthenticateAsClient("FakeServerName");
+
+                StreamReader reader = new StreamReader(sslStream);
+                StreamWriter writer = new StreamWriter(sslStream);
 
                 writer.WriteLine(message);
                 writer.Flush();
